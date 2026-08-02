@@ -37,6 +37,7 @@ Apply to every change, in every language and framework.
 | ----------------------------------------------------------------- | ---------------------- |
 | [csharp-standards](skills/csharp-standards/SKILL.md)               | `*.cs`                 |
 | [typescript-standards](skills/typescript-standards/SKILL.md)       | `*.ts`                 |
+| [typescript-paradigm-standards](skills/typescript-paradigm-standards/SKILL.md) | `*.ts` — class vs function vs union |
 | [sql-standards](skills/sql-standards/SKILL.md)                     | `*.sql`                |
 | [html-standards](skills/html-standards/SKILL.md)                   | `*.html` and templates |
 | [css-standards](skills/css-standards/SKILL.md)                     | `*.css`, `*.scss`      |
