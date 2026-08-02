@@ -49,18 +49,28 @@ export class CustomSlider {
 
 ## Programmatic Subscription
 
-When creating components dynamically, you can subscribe to outputs programmatically:
+Dynamically created components are the one place a subscription to an output is
+correct — a template binding is not available. Angular tears the subscription
+down when the created component is destroyed, so do not track and unsubscribe by
+hand.
 
 ```ts
-const componentRef = viewContainerRef.createComponent(CustomSlider);
+readonly #viewContainer = inject(ViewContainerRef);
+readonly #destroyRef = inject(DestroyRef);
 
-const subscription = componentRef.instance.valueChanged.subscribe((val) => {
-  console.log('Value changed:', val);
-});
+#addSlider(): void {
+  const componentRef = this.#viewContainer.createComponent(CustomSlider);
 
-// Clean up manually if needed (Angular cleans up destroyed components automatically)
-subscription.unsubscribe();
+  componentRef.instance.valueChanged
+    // A method body is not an injection context, so pass the DestroyRef.
+    .pipe(takeUntilDestroyed(this.#destroyRef))
+    .subscribe((value) => this.#onSliderChanged(value));
+}
 ```
+
+In a static template, bind the output instead — `(valueChanged)="…"`. See
+[async-and-observables.md](async-and-observables.md) for when a subscription is
+justified at all.
 
 ## Decorator-based Outputs (@Output) — legacy
 

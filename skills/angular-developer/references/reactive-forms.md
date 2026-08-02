@@ -104,14 +104,19 @@ updateProfile() {
 
 Modern Angular (v18+) provides a single `events` observable on all controls to track value, status, pristine, touched, reset, and submit events.
 
-```ts
-import {ValueChangeEvent, StatusChangeEvent} from '@angular/forms';
+Form `events` is a genuine stream, so an Observable is the right shape here — but
+it is still consumed through `toSignal` or a `takeUntilDestroyed()` subscription
+created in a named method, never a bare `.subscribe()` in a constructor.
 
-this.profileForm.events.subscribe((event) => {
-  if (event instanceof ValueChangeEvent) {
-    console.log('New value:', event.value);
-  }
-});
+```ts
+import {ValueChangeEvent} from '@angular/forms';
+
+protected readonly latestValue = toSignal(
+  this.profileForm.events.pipe(
+    filter((event) => event instanceof ValueChangeEvent),
+    map((event) => event.value),
+  ),
+);
 ```
 
 ## Manual State Management

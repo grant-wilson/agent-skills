@@ -1,6 +1,6 @@
 ---
 name: angular-developer
-description: Angular v22 standards and code generation — CLI-driven scaffolding, standalone components, signal state and the function-based component API, resource APIs for async data, zoneless change detection, built-in template control flow, `inject()`, signal forms, layered plain-CSS component styles, lazy routes, and Vitest + TestBed testing with CDK harnesses, plus reference guides for components, reactivity, HTTP, DI, routing, accessibility, animations, and tooling. Use when writing, reviewing, or scaffolding Angular code, or when working in a project that contains angular.json.
+description: Angular v22 standards and code generation — CLI-driven scaffolding, standalone components, signal state and the function-based component API, resource APIs for async data, a decision rule for signals vs `async`/`await` vs RxJS Observables, zoneless change detection, built-in template control flow, `inject()`, signal forms, layered plain-CSS component styles, lazy routes, and Vitest + TestBed testing with CDK harnesses, plus reference guides for components, reactivity, HTTP, DI, routing, accessibility, animations, and tooling. Use when writing, reviewing, or scaffolding Angular code, or when working in a project that contains angular.json.
 ---
 
 # Angular Developer
@@ -117,13 +117,36 @@ export class CartComponent {
 
 ### Data, forms, and routing
 
-- Load async data with the resource APIs — `httpResource` for HTTP reads,
-  `resource()` for other async sources, `rxResource` when the source is an
-  Observable — and render their `value`/`isLoading`/`error` signals. Do not
-  hand-roll fetch-then-set-signal plumbing or manage subscriptions for data
-  loading. Mutations (POST/PUT/DELETE) still go through `HttpClient` in a service.
+- Choose the async shape by how many values the source produces over time.
+  **Signals** hold state. **Resource APIs** load it — `httpResource` for HTTP
+  reads, `resource()` for other async sources, `rxResource` when the source is an
+  Observable — rendering their `value`/`isLoading`/`error` signals rather than
+  hand-rolled fetch-then-set-signal plumbing. **`async`/`await` for one-shot
+  operations** that produce exactly one result: mutations, dynamic imports, file
+  reads. **Observables only for genuine streams** — sources that emit repeatedly
+  over time (router events, form `events`, WebSocket/SSE) or that need operators
+  (`switchMap`, `debounceTime`, retry with backoff). Reaching for RxJS to model a
+  single value is the most common mistake in an Angular codebase.
+- Mutations (POST/PUT/DELETE) go through `HttpClient` in a service and are
+  awaited with `firstValueFrom()` — a one-shot request is not a stream, and
+  `.subscribe()` on one discards the failure path.
+
+```typescript
+async placeOrder(order: NewOrder): Promise<Order> {
+  return firstValueFrom(this.#http.post<Order>("/api/orders", order));
+}
+```
+
+- Cross between the two worlds only at the edges: `toSignal()` to bring a stream
+  into a template, `toObservable()` when a signal must feed an operator pipeline,
+  `firstValueFrom()` to consume a one-shot Observable from `async`/`await` code.
+  Never call `.subscribe()` in a component. Where a subscription is genuinely
+  unavoidable, create it in a named method — the same rule as effects — and pipe
+  it through `takeUntilDestroyed()`. See
+  [async-and-observables.md](references/async-and-observables.md).
 - Async code uses `async`/`await`. Promise callback chains (`.then()`/`.catch()`)
-  are forbidden, in application code and in tests alike.
+  are forbidden, in application code and in tests alike. `toPromise()` is removed;
+  use `firstValueFrom`/`lastValueFrom`.
 - Signal forms are the only forms API for new work. Reactive and template-driven
   forms are legacy: read those references to understand existing code, never to
   write new code.
@@ -226,6 +249,7 @@ If you require deeper documentation not found in the references above, read the 
 - **Dependent State (`linkedSignal`)**: Creating writable state linked to source signals. Read [linked-signal.md](references/linked-signal.md)
 - **Async Reactivity (`resource`)**: Fetching asynchronous data directly into signal state. Read [resource.md](references/resource.md)
 - **Side Effects (`effect`)**: Naming effects, third-party DOM manipulation (`afterRenderEffect`), and when NOT to use effects. Read [effects.md](references/effects.md)
+- **Choosing an async shape**: When to use signals, resources, `async`/`await`, or Observables; bridging with `toSignal`/`toObservable`/`firstValueFrom`; subscription hygiene. Read [async-and-observables.md](references/async-and-observables.md)
 
 ## HTTP Communication
 

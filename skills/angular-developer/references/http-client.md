@@ -42,13 +42,13 @@ export class UserService {
 Important rules:
 
 - `HttpClient` requests are cold `Observable`s. No request is sent until the `Observable` is subscribed to. Multiple subscriptions send multiple backend requests.
-- Subscribe to mutation requests (`post`, `put`, `patch`, `delete`) so they execute.
+- Mutation requests (`post`, `put`, `patch`, `delete`) must be consumed to execute — `await firstValueFrom(...)` in an `async` service method. Do not `.subscribe()`: a bare subscribe discards the failure path. See [async-and-observables.md](async-and-observables.md).
 - The generic type parameter is a type assertion only. Validate unknown backend data at runtime when the shape is not trusted.
 - Use literal values for `responseType` and `observe`; if options are extracted, write values like `responseType: 'text' as const`.
 - `HttpHeaders` and `HttpParams` are immutable; use the returned instance from `.set()` or `.append()`.
 - Fetch options such as `timeout`, `cache`, `priority`, `mode`, `redirect`, `credentials`, `keepalive`, `referrer`, `referrerPolicy`, and `integrity` are supported where the backend supports them. `withCredentials: true` overrides `credentials`.
 - Handle failures through `HttpErrorResponse`. Network and timeout failures use status `0`; backend failures use the server status code.
-- Prefer the `async` pipe or `toSignal` for component reads so subscriptions are cleaned up.
+- Component reads go through `httpResource` (preferred) or `toSignal`, never a component-level `.subscribe()`.
 
 ## Interceptors
 
