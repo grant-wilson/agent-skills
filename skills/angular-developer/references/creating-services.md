@@ -13,18 +13,18 @@ ng generate service my-data
 Or you can manually create a TypeScript class and decorate it with `@Service()`.
 
 ```ts
-import {Service} from '@angular/core';
+import {Service, signal} from '@angular/core';
 
 @Service()
 export class BasicDataStore {
-  private data: string[] = [];
+  readonly #data = signal<readonly string[]>([]);
 
   addData(item: string): void {
-    this.data.push(item);
+    this.#data.update((items) => [...items, item]);
   }
 
-  getData(): string[] {
-    return [...this.data];
+  getData(): readonly string[] {
+    return this.#data();
   }
 }
 ```
@@ -48,21 +48,28 @@ Once a service is created, you can inject it into components, directives, or oth
 ### Injecting into a Component
 
 ```ts
-import {Component, inject} from '@angular/core';
+import {Component, computed, inject} from '@angular/core';
 import {BasicDataStore} from './basic-data-store.service';
 
 @Component({
   selector: 'app-example',
   template: `
     <div>
-      <p>Data items: {{ dataStore.getData().length }}</p>
-      <button (click)="dataStore.addData('New Item')">Add Item</button>
+      <p>Data items: {{ itemCount() }}</p>
+      <button (click)="addItem()">Add Item</button>
     </div>
   `,
 })
 export class Example {
-  // Inject the service as a class field
-  dataStore = inject(BasicDataStore);
+  // Inject the service as a class field; templates cannot see `#` members,
+  // so expose only what the template needs as `protected`.
+  readonly #dataStore = inject(BasicDataStore);
+
+  protected readonly itemCount = computed(() => this.#dataStore.getData().length);
+
+  protected addItem(): void {
+    this.#dataStore.addData('New Item');
+  }
 }
 ```
 
@@ -71,19 +78,19 @@ export class Example {
 Services can inject other services in the exact same way.
 
 ```ts
-import {Injectable, inject} from '@angular/core';
+import {Service, inject, signal} from '@angular/core';
 import {AdvancedDataStore} from './advanced-data-store.service';
 
 @Service()
 export class BasicDataStore {
   // Injecting another service
-  private advancedDataStore = inject(AdvancedDataStore);
+  readonly #advancedDataStore = inject(AdvancedDataStore);
 
-  private data: string[] = [];
+  readonly #data = signal<readonly string[]>([]);
 
-  getData(): string[] {
+  getData(): readonly string[] {
     // Combine data from this service and the injected service
-    return [...this.data, ...this.advancedDataStore.getData()];
+    return [...this.#data(), ...this.#advancedDataStore.getData()];
   }
 }
 ```

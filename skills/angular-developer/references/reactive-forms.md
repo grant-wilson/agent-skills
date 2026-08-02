@@ -1,4 +1,8 @@
-# Reactive Forms
+# Reactive Forms (legacy)
+
+> **Legacy reference.** Signal forms are the forms API for all new work — see
+> [signal-forms.md](signal-forms.md). Read this file to understand and maintain
+> reactive forms that already exist; do not write new ones.
 
 Reactive forms provide a model-driven approach to handling form inputs. They are built around observable streams and provide synchronous access to the data model, making them more scalable and testable than template-driven forms.
 
@@ -25,17 +29,17 @@ import {ReactiveFormsModule, NonNullableFormBuilder, Validators} from '@angular/
   templateUrl: './profile-editor.component.html',
 })
 export class ProfileEditor {
-  private readonly fb = inject(NonNullableFormBuilder);
+  readonly #fb = inject(NonNullableFormBuilder);
 
   // Using FormBuilder for concise definition
-  protected readonly profileForm = this.fb.group({
+  protected readonly profileForm = this.#fb.group({
     firstName: ['', Validators.required],
     lastName: '',
-    address: this.fb.group({
+    address: this.#fb.group({
       street: '',
       city: '',
     }),
-    aliases: this.fb.array([this.fb.control('')]),
+    aliases: this.#fb.array([this.#fb.control('')]),
   });
 
   protected onSubmit() {

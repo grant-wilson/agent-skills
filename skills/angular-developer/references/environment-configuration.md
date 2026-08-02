@@ -79,25 +79,26 @@ initialization.
 Load the configuration before the application starts:
 
 ```ts
-import {Service, inject} from '@angular/core';
+import {Service, inject, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 
 @Service()
 export class AppConfigService {
-  private config!: {apiUrl: string};
-
-  private readonly http = inject(HttpClient);
+  readonly #http = inject(HttpClient);
+  readonly #config = signal<AppConfig | undefined>(undefined);
 
   loadConfig() {
-    return this.http.get<AppConfig>('/assets/config.json').pipe(
-      tap((data) => {
-        this.config = data;
-      }),
-    );
+    return this.#http
+      .get<AppConfig>('/assets/config.json')
+      .pipe(tap((data) => this.#config.set(data)));
   }
 
   get apiUrl(): string {
-    return this.config.apiUrl;
+    const config = this.#config();
+    if (!config) {
+      throw new Error('AppConfigService read before loadConfig() completed');
+    }
+    return config.apiUrl;
   }
 }
 ```

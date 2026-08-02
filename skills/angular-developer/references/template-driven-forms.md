@@ -1,4 +1,8 @@
-# Template-Driven Forms
+# Template-Driven Forms (legacy)
+
+> **Legacy reference.** Signal forms are the forms API for all new work — see
+> [signal-forms.md](signal-forms.md). Read this file to understand and maintain
+> template-driven forms that already exist; do not write new ones.
 
 Template-driven forms use two-way data binding (`[(ngModel)]`) to update the data model in the component as changes are made in the template and vice versa. They are ideal for simple forms and use directives in the HTML template to manage form state and validation.
 

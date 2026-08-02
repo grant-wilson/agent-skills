@@ -24,6 +24,19 @@ description: What the skill covers, then when to use it.
 ---
 ```
 
+The `name` follows the repository's two-tier suffix scheme:
+
+- `<topic>-standards` for the universal skills and the per-language ones —
+  `typescript-standards`, `css-standards`, `unit-testing-standards`.
+- `<stack>-developer` for a framework or runtime, where the skill also covers
+  scaffolding, tooling, and generated code, not just how to write the source —
+  `angular-developer`, `dotnet-developer`, `deno-developer`.
+
+A skill that performs a task rather than stating a standard is named for the task
+(`angular-new-app`). Renaming a published skill breaks
+`npx skills add … --skill <old-name>` for anyone already installing it, so treat
+it as a breaking change and note it in the README.
+
 Do not add other frontmatter keys. Fields like `paths` or `globs` are not part
 of the spec, are ignored by the CLI and by most agents, and give a false
 impression that scoping is enforced — put the scope in the `description`

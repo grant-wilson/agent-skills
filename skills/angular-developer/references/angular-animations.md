@@ -1,9 +1,12 @@
 # Angular Animations
 
-When animating elements in Angular, **first analyze the project's Angular version** in `package.json`.
-For modern applications (**Angular v20.2 and above**), prefer using native CSS with `animate.enter` and `animate.leave`. For older applications, you may need to use the deprecated `@angular/animations` package.
+Animate with native CSS using `animate.enter` and `animate.leave`. The
+`@angular/animations` DSL is deprecated — the section on it below is for reading
+and removing animations that already exist, never for writing new ones.
 
-## 1. Native CSS Animations (v20.2+ Recommended)
+Gate every non-essential animation behind `prefers-reduced-motion`.
+
+## 1. Native CSS Animations
 
 Modern Angular provides `animate.enter` and `animate.leave` to animate elements as they enter or leave the DOM. They apply CSS classes at the appropriate times.
 

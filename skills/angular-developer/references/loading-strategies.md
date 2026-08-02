@@ -19,12 +19,20 @@ Components or routes are loaded only when the user navigates to them. This creat
 
 ### Lazy Loading Components
 
-Use `loadComponent` to fetch the component on demand.
+Use `loadComponent` to fetch the component on demand. Give the lazily-loaded
+component a **default export** so the loader is a bare `import()` — no `.then()`
+callback, matching the `loadChildren` form below.
+
+```ts
+// admin/admin.ts
+@Component({/* … */})
+export default class Admin {}
+```
 
 ```ts
 {
   path: 'admin',
-  loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent)`,
+  loadComponent: () => import('./admin/admin'),
 }
 ```
 

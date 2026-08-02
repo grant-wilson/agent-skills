@@ -1,49 +1,217 @@
 ---
 name: angular-developer
-description: Generates Angular code and provides architectural guidance. Trigger when creating projects, components, services, or HTTP communication, or for best practices on reactivity (signals, linkedSignal, resource, httpResource), forms, dependency injection, routing, SSR, accessibility (ARIA), animations, styling (component styles, Tailwind CSS), testing, or CLI tooling.
-license: MIT
-metadata:
-  author: Copyright 2026 Google LLC
-  version: '1.0'
+description: Angular v22 standards and code generation — CLI-driven scaffolding, standalone components, signal state and the function-based component API, resource APIs for async data, zoneless change detection, built-in template control flow, `inject()`, signal forms, layered plain-CSS component styles, lazy routes, and Vitest + TestBed testing with CDK harnesses, plus reference guides for components, reactivity, HTTP, DI, routing, accessibility, animations, and tooling. Use when writing, reviewing, or scaffolding Angular code, or when working in a project that contains angular.json.
 ---
 
-# Angular Developer Guidelines
+# Angular Developer
 
-1. Always analyze the project's Angular version before providing guidance, as best practices and available features can vary significantly between versions. If creating a new project with Angular CLI, do not specify a version unless prompted by the user.
+This skill targets **Angular v22**, the current stable release. Do not branch
+guidance by version or hedge across older majors. A project on an older major is
+brought current with `ng update` before new features are added to it.
 
-2. When generating code, follow Angular's style guide and best practices for maintainability and performance. Use the Angular CLI for scaffolding components, services, directives, pipes, and routes to ensure consistency.
+Reference guides under `references/` are derived from the Angular team's
+`angular-developer` skill — see [NOTICE.md](NOTICE.md). The House Standards
+below override anything in those references that disagrees with them.
 
-3. Once you finish generating code, run `ng build` to ensure there are no build errors. If there are errors, analyze the error messages and fix them before proceeding. Do not skip this step, as it is critical for ensuring the generated code is correct and functional.
+## House Standards
 
-## Creating New Projects
+These are not defaults to weigh against alternatives. They are the standard.
 
-If no guidelines are provided by the user, here are some default rules to follow when creating a new Angular project:
+### Scaffolding and tooling
 
-1. Use the latest stable version of Angular unless the user specifies otherwise.
-2. Use Signals Forms for form management in new projects (available in Angular v21 and newer) [Find out more](references/signal-forms.md).
+- All scaffolding and maintenance goes through the Angular CLI —
+  `ng generate component|service|guard|…` for new artifacts, `ng update` for
+  framework upgrades, `ng add` for integrating libraries. Never hand-create
+  component files or hand-edit framework versions in `package.json`; the CLI
+  applies schematics and migrations that manual edits miss.
+- Plain CSS is the only style language. Scaffold with `--style=css` and keep the
+  `schematics` default in `angular.json` set to `css`. No Sass/SCSS, Less, or any
+  other preprocessor.
+- Tailwind CSS is not used, and is never added to a project. Utility-class
+  styling defeats the design-token and cascade-layer rules below.
+- Set `"cli": { "analytics": false }` in `angular.json` so `ng` never prompts
+  interactively in CI or local runs.
 
-**Execution Rules for `ng new`:**
-When asked to create a new Angular project, you must determine the correct execution command by following these strict steps:
+### Components and reactivity
 
-**Step 1: Check for an explicit user version.**
+- Every component, directive, and pipe is standalone. Never write
+  `standalone: true` (it is the default) and never `standalone: false`. No new
+  NgModules — compose via component `imports`, and provide app-wide services with
+  `providedIn: "root"` or route-level `providers`.
+- State is signal-based: `signal()` for writable state, `computed()` for
+  derivation, `linkedSignal()` for resettable derived state, and `effect()` only
+  for synchronizing with non-Angular code. Use the function-based component API —
+  `input()`, `output()`, `model()`, `viewChild()`, `contentChild()` — never the
+  decorator forms `@Input`/`@Output`/`@ViewChild`.
+- Field visibility follows the TypeScript standard, adapted to what templates can
+  see: `#`-private for everything the template does not touch (injected
+  dependencies, internal state, helper methods), `protected readonly` only for
+  members a template binds to, and public `readonly` for the component's API —
+  `input()`, `output()`, `model()`. The TypeScript `private` keyword is forbidden;
+  it is erased at runtime and buys nothing over `#`.
 
-- **IF** the user requests a specific version (e.g., Angular 15), bypass local installations and strictly use `npx`.
-- **Command:** `npx @angular/cli@<requested_version> new <project-name>`
+```typescript
+@Component({/* … */})
+export class CartItemComponent {
+  readonly #pricing = inject(PricingService);
 
-**Step 2: Check for an existing Angular installation.**
+  readonly item = input.required<CartItem>();
+  readonly quantity = model(1);
+  readonly removed = output<string>();
 
-- **IF** no specific version is requested, run `ng version` in the terminal to check if the Angular CLI is already installed on the system.
-- **IF** the command succeeds and returns an installed version, use the local/global installation directly.
-- **Command:** `ng new <project-name>`
+  protected readonly lineTotal = computed(() =>
+    this.#pricing.total(this.item(), this.quantity()),
+  );
+}
+```
 
-**Step 3: Fallback to Latest.**
+- An `effect()` is never left anonymous in a constructor. Name it for what it
+  synchronizes — either a `#`-private method the constructor calls, or a field
+  holding the `EffectRef` — whichever reads better in context. A constructor full
+  of bare `effect(() => …)` calls hides how many side effects a component has and
+  what each one is for.
 
-- **IF** no specific version is requested AND the `ng version` command fails (indicating no Angular installation exists), you must use `npx` to fetch the latest version.
-- **Command:** `npx @angular/cli@latest new <project-name>`
+```typescript
+export class CartComponent {
+  readonly #storage = inject(StorageService);
+  protected readonly items = signal<readonly CartItem[]>([]);
+
+  constructor() {
+    this.#persistCartToStorage();
+  }
+
+  #persistCartToStorage(): void {
+    effect(() => this.#storage.write("cart", this.items()));
+  }
+}
+```
+
+- Applications run zoneless: `provideZonelessChangeDetection()` in
+  `app.config.ts`, no `zone.js` polyfill. `OnPush` is the framework default —
+  never write `changeDetection: ChangeDetectionStrategy.OnPush` explicitly, since
+  like `standalone: true` it is redundant. A component that genuinely needs eager
+  checking opts out with `ChangeDetectionStrategy.Eager` (`Default` is deprecated
+  and aliases `Eager`). State flows through signals so the framework knows what to
+  update; never call `detectChanges()` manually.
+- Templates use the built-in control flow — `@if`/`@else`, `@for` with a mandatory
+  `track` expression, `@switch`, and `@defer` for below-the-fold or heavy
+  components — never `*ngIf`/`*ngFor`/`*ngSwitch`.
+
+```html
+@for (order of orders(); track order.id) {
+  <app-order-row [order]="order" (removed)="remove($event)" />
+} @empty {
+  <p>No orders yet.</p>
+}
+```
+
+- Use `inject()` in field initializers instead of constructor parameter
+  injection; it composes into reusable functions and keeps classes free of
+  boilerplate constructors.
+- Never reach for browser or web APIs directly. Use the Angular-idiomatic wrapper
+  for each: the `DOCUMENT` token instead of the global `document`, `HttpClient`
+  instead of `fetch`/`XMLHttpRequest`, `Router`/`Location` instead of
+  `window.location` or the History API, `DomSanitizer` instead of raw DOM
+  manipulation, and `PLATFORM_ID`/`isPlatformBrowser()` to guard platform-specific
+  code. Injecting the wrappers keeps code testable and SSR-safe.
+
+### Data, forms, and routing
+
+- Load async data with the resource APIs — `httpResource` for HTTP reads,
+  `resource()` for other async sources, `rxResource` when the source is an
+  Observable — and render their `value`/`isLoading`/`error` signals. Do not
+  hand-roll fetch-then-set-signal plumbing or manage subscriptions for data
+  loading. Mutations (POST/PUT/DELETE) still go through `HttpClient` in a service.
+- Async code uses `async`/`await`. Promise callback chains (`.then()`/`.catch()`)
+  are forbidden, in application code and in tests alike.
+- Signal forms are the only forms API for new work. Reactive and template-driven
+  forms are legacy: read those references to understand existing code, never to
+  write new code.
+- Routes lazy-load (`loadComponent`/`loadChildren`) by default,
+  guards/resolvers/interceptors are plain functions (`CanActivateFn`,
+  `ResolveFn`, `HttpInterceptorFn`), and route params bind to component inputs via
+  `withComponentInputBinding()`.
+
+### Styling
+
+- Component styles live in an explicit cascade layer so a component's rules can
+  never accidentally outrank the design system. Declare the order once in the
+  global stylesheet and wrap every component stylesheet's rules in a layer.
+
+```css
+/* styles.css — declares layer order once, before any component style loads */
+@layer reset, base, components, utilities;
+```
+
+```css
+/* cart-item.css */
+@layer components {
+  :host {
+    display: block;
+    padding: var(--space-2);
+    background: var(--color-surface);
+  }
+}
+```
+
+- Values come from design tokens (`var(--…)`) defined as custom properties. Raw
+  hex values and magic pixel numbers in component styles are a review failure.
+- Keep view encapsulation at the default `Emulated`. `::ng-deep` is forbidden —
+  expose a custom property for the child to consume instead.
+
+### Testing
+
+- Unit tests run on Vitest. Karma and Jasmine are fully removed: no
+  `karma.conf.js`, no `karma`/`jasmine-core`/`@types/jasmine` in `package.json`,
+  and no Jasmine globals (`jasmine.*`, `spyOn`) anywhere. Use Vitest's
+  `describe`/`it`/`expect`/`vi`. Apply
+  `ng generate @schematics/angular:refactor-jasmine-vitest` to migrate a project
+  that still runs Karma.
+- Every component and service ships with `TestBed` tests that exercise its public
+  surface: set inputs via `fixture.componentRef.setInput()`, assert on rendered
+  DOM and emitted outputs, stub HTTP with `provideHttpClientTesting()`. Zoneless
+  tests await `fixture.whenStable()` rather than calling `fixture.detectChanges()`.
+- Drive components through CDK test harnesses (`@angular/cdk/testing`), not raw
+  DOM queries or low-level event dispatch. Obtain a `HarnessLoader` via
+  `TestbedHarnessEnvironment.loader(fixture)`. Prefer existing Material/CDK
+  harnesses, and author a `ComponentHarness` for each component you own, in a
+  co-located `*.harness.ts`.
+- Shared test code lives in a project-level `testing/` folder — TestBed setup
+  builders, fakes for injected services, and data builders. Spec files contain
+  Arrange–Act–Assert cases and nothing else; a helper defined at the top of a spec
+  file belongs in `testing/` instead.
+
+```
+src/
+  testing/
+    render-component.ts        // TestBed setup builder
+    fake-order-repository.ts   // fake for an injected port
+    order.builder.ts           // domain data builder
+  orders/
+    order-list.ts
+    order-list.harness.ts      // ComponentHarness, co-located
+    order-list.spec.ts         // AAA cases only
+```
+
+### Verification loop
+
+Follow red–green–refactor: write the failing test first, then the implementation.
+Before reporting work as done, in this order:
+
+1. `ng test` — passes, including the new test that failed before the change.
+2. `ng build` — succeeds with zero warnings. Warnings are errors; fix them rather
+   than filtering them out.
+
+Do not skip either step, and do not report success without having run them.
+
+## Creating new projects
+
+For the full `ng new` flow, use the `angular-new-app` skill. The essentials:
+`npx ng new <app-name> --style=css --interactive=false`, then set
+`"cli": { "analytics": false }` in `angular.json`, then generate every subsequent
+artifact with `ng generate`. Never pass `--skip-tests`.
 
 ## Components
-
-When working with Angular components, consult the following references based on the task:
 
 - **Fundamentals**: Anatomy, metadata, core concepts, and template control flow (@if, @for, @switch). Read [components.md](references/components.md)
 - **Inputs**: Signal-based inputs, transforms, and model inputs. Read [inputs.md](references/inputs.md)
@@ -54,33 +222,24 @@ If you require deeper documentation not found in the references above, read the 
 
 ## Reactivity and Data Management
 
-When managing state and data reactivity, use Angular Signals and consult the following references:
-
 - **Signals Overview**: Core signal concepts (`signal`, `computed`), reactive contexts, and `untracked`. Read [signals-overview.md](references/signals-overview.md)
 - **Dependent State (`linkedSignal`)**: Creating writable state linked to source signals. Read [linked-signal.md](references/linked-signal.md)
 - **Async Reactivity (`resource`)**: Fetching asynchronous data directly into signal state. Read [resource.md](references/resource.md)
-- **Side Effects (`effect`)**: Logging, third-party DOM manipulation (`afterRenderEffect`), and when NOT to use effects. Read [effects.md](references/effects.md)
+- **Side Effects (`effect`)**: Naming effects, third-party DOM manipulation (`afterRenderEffect`), and when NOT to use effects. Read [effects.md](references/effects.md)
 
 ## HTTP Communication
-
-When communicating with backend services, use Angular HTTP APIs and consult the following reference:
 
 - **HTTP Client and Resources**: `provideHttpClient`, `HttpClient`, interceptors, and `httpResource`. Read [http-client.md](references/http-client.md)
 
 ## Forms
 
-In most cases for new apps, **prefer signal forms**. When making a forms decision, analyze the project and consider the following guidelines:
+Signal forms for all new work; the other two references describe legacy code only.
 
-- If the application is using v21 or newer and this is a new form, **prefer signal forms**.
-- For older applications or when working with existing forms, use the appropriate form type that matches the applications current form strategy.
-
-- **Signal Forms**: Use signals for form state management. Read [signal-forms.md](references/signal-forms.md)
-- **Template-driven forms**: Use for simple forms. Read [template-driven-forms.md](references/template-driven-forms.md)
-- **Reactive forms**: Use for complex forms. Read [reactive-forms.md](references/reactive-forms.md)
+- **Signal Forms**: Signals for form state management. Read [signal-forms.md](references/signal-forms.md)
+- **Reactive forms** (legacy): For reading and maintaining existing reactive forms. Read [reactive-forms.md](references/reactive-forms.md)
+- **Template-driven forms** (legacy): For reading and maintaining existing template-driven forms. Read [template-driven-forms.md](references/template-driven-forms.md)
 
 ## Dependency Injection
-
-When implementing dependency injection in Angular, follow these guidelines:
 
 - **Fundamentals**: Overview of Dependency Injection, services, and the `inject()` function. Read [di-fundamentals.md](references/di-fundamentals.md)
 - **Creating and Using Services**: Creating services, the `providedIn: 'root'` option, and injecting into components or other services. Read [creating-services.md](references/creating-services.md)
@@ -90,7 +249,7 @@ When implementing dependency injection in Angular, follow these guidelines:
 
 ## Pipes
 
-When formatting values in templates, creating custom pipes, or reusing pipe-like logic in TypeScript, consult the following reference. Prefer pipes in templates; outside templates, avoid injecting pipe classes just to call `transform()`.
+Prefer pipes in templates; outside templates, avoid injecting pipe classes just to call `transform()`.
 
 - **Pipes**: Built-in pipe imports, custom pipe naming and implementation, pure vs impure pipes, and TypeScript reuse patterns using standalone formatting functions or extracted plain functions. Read [pipes.md](references/pipes.md)
 
@@ -98,11 +257,9 @@ When formatting values in templates, creating custom pipes, or reusing pipe-like
 
 When building accessible custom components for any of the following patterns: Accordion, Listbox, Combobox, Menu, Tabs, Toolbar, Tree, Grid, consult the following reference:
 
-- **Angular Aria Components**: Building headless, accessible components (Accordion, Listbox, Combobox, Menu, Tabs, Toolbar, Tree, Grid) and styling ARIA attributes. Read [angular-aria.md](references/angular-aria.md)
+- **Angular Aria Components**: Building headless, accessible components and styling ARIA attributes. Read [angular-aria.md](references/angular-aria.md)
 
 ## Routing
-
-When implementing navigation in Angular, consult the following references:
 
 - **Define Routes**: URL paths, static vs dynamic segments, wildcards, and redirects. Read [define-routes.md](references/define-routes.md)
 - **Route Loading Strategies**: Eager vs lazy loading, and context-aware loading. Read [loading-strategies.md](references/loading-strategies.md)
@@ -118,24 +275,17 @@ If you require deeper documentation or more context, visit the [official Angular
 
 ## Styling and Animations
 
-When implementing styling and animations in Angular, consult the following references:
-
-- **Using Tailwind CSS with Angular**: Integrating Tailwind CSS into Angular projects. Read [tailwind-css.md](references/tailwind-css.md)
-- **Angular Animations**: Using native CSS (recommended) or the legacy DSL for dynamic effects. Read [angular-animations.md](references/angular-animations.md)
-- **Styling components**: Best practices for component styles and encapsulation. Read [component-styling.md](references/component-styling.md)
+- **Styling components**: Cascade layers, encapsulation, and component style scoping. Read [component-styling.md](references/component-styling.md)
+- **Angular Animations**: Using native CSS for dynamic effects. Read [angular-animations.md](references/angular-animations.md)
 
 ## Testing
 
-When writing or updating tests, consult the following references based on the task:
-
-- **Fundamentals**: Best practices for unit testing (Vitest), async patterns, and `TestBed`. Read [testing-fundamentals.md](references/testing-fundamentals.md)
-- **Component Harnesses**: Standard patterns for robust component interaction. Read [component-harnesses.md](references/component-harnesses.md)
+- **Fundamentals**: TDD loop, Arrange–Act–Assert, shared `testing/` utilities, zoneless async patterns, and `TestBed`. Read [testing-fundamentals.md](references/testing-fundamentals.md)
+- **Component Harnesses**: Authoring and using harnesses to drive components. Read [component-harnesses.md](references/component-harnesses.md)
 - **Router Testing**: Using `RouterTestingHarness` for reliable navigation tests. Read [router-testing.md](references/router-testing.md)
 - **End-to-End (E2E) Testing**: Setting up and running E2E tests. Read [e2e-testing.md](references/e2e-testing.md)
 
 ## Tooling
-
-When working with Angular tooling, consult the following references:
 
 - **Angular CLI**: Creating applications, generating code (components, routes, services), serving, and building. Read [cli.md](references/cli.md)
 - **Code Modernization**: Automatically refactoring to modern standards using migrations. Read [migrations.md](references/migrations.md)

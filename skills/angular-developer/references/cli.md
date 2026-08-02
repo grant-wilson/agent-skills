@@ -8,9 +8,11 @@ The Angular CLI (`ng`) is the primary tool for managing an Angular workspace. Al
 
 ```bash
 ng add @angular/material
-ng add tailwindcss
 ng add @angular/fire
 ```
+
+Never `ng add tailwindcss`. Tailwind is not used — component styles are plain
+CSS in a cascade layer, built from design tokens.
 
 To update the application and its dependencies (which automatically runs code migrations):
 
@@ -25,6 +27,7 @@ Always use the CLI to generate code to ensure it adheres to Angular standards an
 | Target       | Command               | Notes                                                                                          |
 | :----------- | :-------------------- | :--------------------------------------------------------------------------------------------- |
 | Component    | `ng g c path/to/name` | Generates a component. Use `--inline-style` (`-s`) or `--inline-template` (`-t`) if requested. |
+| Harness      | hand-written          | Add a co-located `<name>.harness.ts` `ComponentHarness` for every component you own.           |
 | Service      | `ng g s path/to/name` | Generates an `@Service` service.                                                               |
 | Directive    | `ng g d path/to/name` | Generates a directive.                                                                         |
 | Pipe         | `ng g p path/to/name` | Generates a pipe.                                                                              |
@@ -72,8 +75,15 @@ ng build
 
 ## 5. Testing
 
-- **Unit Tests**: Run `ng test` to execute unit tests via the configured test runner (e.g., Karma or Vitest).
+- **Unit Tests**: Run `ng test`. The test runner is Vitest. A workspace still configured for Karma is migrated with `ng generate @schematics/angular:refactor-jasmine-vitest` before any new test is written.
 - **End-to-End (E2E)**: Run `ng e2e`. If no E2E framework is configured, the CLI will prompt to install one (Cypress, Playwright, Puppeteer, etc.).
+- Never pass `--skip-tests` to any generator.
+
+## 5a. Non-interactive defaults
+
+Every workspace sets `"cli": { "analytics": false }` in `angular.json` so `ng`
+never blocks on an analytics prompt, and keeps the `schematics` style default at
+`css`.
 
 ## 6. Deployment
 

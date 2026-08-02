@@ -1,6 +1,6 @@
 ---
 name: unit-testing-standards
-description: Unit testing standards for every language — tests ship with every change, TDD red-green-refactor, Arrange-Act-Assert with one behavior per test, testing through the public surface, fakes over mocks, the FIRST properties, coverage as a floor, and tests treated as first-class code. Use when writing or reviewing tests, fixing a bug, deciding what to assert, or choosing between a fake and a mock.
+description: Unit testing standards for every language — tests ship with every change, TDD red-green-refactor, Arrange-Act-Assert with one behavior per test, testing through the public surface, fakes over mocks, the FIRST properties, coverage as a floor, shared test utilities instead of ad-hoc per-file helpers, and tests treated as first-class code. Use when writing or reviewing tests, fixing a bug, deciding what to assert, or choosing between a fake and a mock.
 ---
 
 **Always implement unit tests.** No production behavior ships without unit tests
@@ -53,7 +53,31 @@ on new and changed code; any excluded line carries a comment stating why. High
 coverage never substitutes for asserting the right things — every test must be
 able to fail for a real defect.
 
-**Tests are first-class code.** Co-locate them with the module under test, hold
-them to the same review standards, and refactor shared setup into
-builders/fixtures instead of copy-paste. Delete a test only when the behavior it
-specifies is deleted.
+**Shared test utilities, never ad-hoc helpers.** Setup functions, fakes, data
+builders, and custom assertions live in a dedicated testing module that every
+spec imports — never redefined at the top of each spec file. A spec file contains
+its Arrange–Act–Assert cases and nothing else; the moment a helper is worth
+writing, it is worth putting where the next spec can find it. A setup block
+copy-pasted between two spec files is the same review failure as duplicated
+production code.
+
+```typescript
+// testing/order-service.fixture.ts
+export function anOrderService(overrides: Partial<Deps> = {}): OrderService {
+  return new OrderService(overrides.repository ?? new FakeOrderRepository());
+}
+
+// order-service.spec.ts — reads as expectations, not plumbing
+it("rejects an order whose total is negative", () => {
+  const service = anOrderService();
+  expect(service.place(anOrder({ totalCents: -100 }))).toEqual({
+    ok: false,
+    error: "invalid-total",
+  });
+});
+```
+
+**Tests are first-class code.** Co-locate specs with the module under test, hold
+them to the same review standards, and keep the shared utilities they import
+under the same lint, type, and coverage rules as production code. Delete a test
+only when the behavior it specifies is deleted.

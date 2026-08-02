@@ -1,6 +1,6 @@
 ---
-name: dotnet-conventions
-description: .NET conventions — SDK pinning and centralized build/package settings, minimal APIs with route groups and TypedResults, constructor injection with correct lifetimes, validated options binding, ILogger message templates and OpenTelemetry, async EF Core queries projected to DTOs with versioned migrations, problem-details error handling, and xUnit plus WebApplicationFactory testing. Use when writing or reviewing a .NET project (global.json, *.sln, *.csproj) or an ASP.NET Core service.
+name: dotnet-developer
+description: .NET standards — SDK pinning and centralized build/package settings, minimal APIs with route groups and TypedResults, constructor injection with correct lifetimes, validated options binding, ILogger message templates and OpenTelemetry, async EF Core queries projected to DTOs with versioned migrations, problem-details error handling, and xUnit plus WebApplicationFactory testing. Use when writing or reviewing a .NET project (global.json, *.sln, *.csproj) or an ASP.NET Core service.
 ---
 
 - Target the current LTS (or newer STS by explicit team decision), pinned in

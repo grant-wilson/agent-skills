@@ -1,6 +1,6 @@
 ---
-name: deno-conventions
-description: Deno conventions — JSR and @std dependencies pinned in the deno.json import map, the built-in toolchain (fmt, lint, check, test, task), web-platform and Deno-native APIs over node compat, least-privilege permission flags with no --allow-all, deliberate module surfaces, and @std/testing for BDD tests, fake time, and mocks. Use when writing or reviewing code in a project that contains deno.json or deno.jsonc.
+name: deno-developer
+description: Deno standards — JSR and @std dependencies pinned in the deno.json import map, the built-in toolchain (fmt, lint, check, test, task), web-platform and Deno-native APIs over node compat, least-privilege permission flags with no --allow-all, deliberate module surfaces, and @std/testing for BDD tests, fake time, and mocks. Use when writing or reviewing code in a project that contains deno.json or deno.jsonc.
 ---
 
 - Prefer Deno's `@std/*` standard library and JSR packages over npm imports;

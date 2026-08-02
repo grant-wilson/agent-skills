@@ -24,8 +24,13 @@
     },
     {
       "title": "Frameworks and Runtimes",
-      "description": "Conventions for a specific stack, selected by the project's manifest files.",
-      "skills": ["angular-conventions", "dotnet-conventions", "deno-conventions"]
+      "description": "Standards for a specific stack, selected by the project's manifest files.",
+      "skills": [
+        "angular-developer",
+        "angular-new-app",
+        "dotnet-developer",
+        "deno-developer"
+      ]
     }
   ]
 }

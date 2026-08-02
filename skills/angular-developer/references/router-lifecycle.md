@@ -18,14 +18,22 @@ Inject the `Router` and filter the `events` observable.
 
 ```ts
 import {Router, NavigationStart, NavigationEnd} from '@angular/router';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 
 export class MyService {
-  private router = inject(Router);
+  readonly #router = inject(Router);
 
   constructor() {
-    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((event) => {
-      console.log('Navigated to:', event.url);
-    });
+    this.#logCompletedNavigations();
+  }
+
+  #logCompletedNavigations(): void {
+    this.#router.events
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe((event) => console.log('Navigated to:', event.url));
   }
 }
 ```

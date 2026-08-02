@@ -57,16 +57,23 @@ import {AnalyticsLogger} from './analytics-logger.service';
 })
 export class Navbar {
   // Injecting dependencies using class field initializers
-  private readonly router = inject(Router);
-  private readonly analytics = inject(AnalyticsLogger);
+  readonly #router = inject(Router);
+  readonly #analytics = inject(AnalyticsLogger);
 
-  navigateToDetail(event: Event) {
+  protected navigateToDetail(event: Event) {
     event.preventDefault();
-    this.analytics.trackEvent('navigation', '/details');
-    this.router.navigate(['/details']);
+    this.#analytics.trackEvent('navigation', '/details');
+    this.#router.navigate(['/details']);
   }
 }
 ```
+
+### Visibility of injected fields
+
+Injected dependencies are `#`-private. The TypeScript `private` keyword is not
+used — it is erased at runtime and provides no real encapsulation. Templates
+cannot see `#` members, so a member the template binds to is `protected readonly`
+instead; only `input()`, `output()`, and `model()` are public.
 
 ### Where can `inject()` be used? (Injection Context)
 
@@ -86,11 +93,11 @@ import {HttpClient} from '@angular/common/http';
 // 1. In a Component (Field Initializer & Constructor)
 @Component(/* ... */)
 export class Example {
-  private service1 = inject(MyService); // ✅ Field initializer
+  readonly #service1 = inject(MyService); // ✅ Field initializer
 
-  private service2: MyService;
+  readonly #service2: MyService;
   constructor() {
-    this.service2 = inject(MyService); // ✅ Constructor body
+    this.#service2 = inject(MyService); // ✅ Constructor body
   }
 }
 
@@ -99,13 +106,13 @@ export class Example {
   /*...*/
 })
 export class MyDirective {
-  private element = inject(ElementRef); // ✅ Field initializer
+  readonly #element = inject(ElementRef); // ✅ Field initializer
 }
 
 // 3. In a Service
 @Service()
 export class MyService {
-  private http = inject(HttpClient); // ✅ Field initializer
+  readonly #http = inject(HttpClient); // ✅ Field initializer
 }
 
 // 4. In a Route Guard (Functional)

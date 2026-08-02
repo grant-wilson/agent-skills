@@ -62,9 +62,11 @@ const subscription = componentRef.instance.valueChanged.subscribe((val) => {
 subscription.unsubscribe();
 ```
 
-## Decorator-based Outputs (@Output)
+## Decorator-based Outputs (@Output) — legacy
 
-The legacy API uses the `@Output()` decorator with an `EventEmitter`. It remains supported but is not recommended for new code.
+`@Output()` with an `EventEmitter` is never written in new code. This section is
+for reading and migrating outputs that already exist; `ng generate @angular/core:output-migration`
+converts them.
 
 ```ts
 import { Component, Output, EventEmitter } from '@angular/core';

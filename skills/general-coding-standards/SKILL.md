@@ -1,12 +1,20 @@
 ---
 name: general-coding-standards
-description: Language-agnostic coding standards — self-documenting names, small single-responsibility units, fail-fast validation, DRY applied with judgment, SOLID defaults, no dead or speculative code, tooling as the style authority, reviewed and tested changes, and security hygiene. Use when writing, refactoring, or reviewing code in any language, and when deciding how to name, structure, or comment it.
+description: Language-agnostic coding standards — self-documenting names, comments that explain why and never narrate the change, small single-responsibility units, fail-fast validation, DRY applied with judgment, SOLID defaults, no dead or speculative code, tooling as the style authority, reviewed and tested changes, and security hygiene. Use when writing, refactoring, or reviewing code in any language, and when deciding how to name, structure, or comment it.
 ---
 
 **Self-documenting code.** Names of files, types, functions, and variables say
 what a thing is or does — precisely enough that most comments become
 unnecessary. Comments exist only to explain _why_: a non-obvious constraint,
 trade-off, or workaround. A comment that restates the code it precedes is
+deleted in review.
+
+**Comments address the reader, not the request.** A comment never narrates the
+work that produced it. No "added X as requested", "changed this to fix the bug",
+"note: now uses Y instead of Z", no restating what a diff did, and no remark
+addressed to whoever asked for the change. The codebase carries no memory of how
+it came to be — that belongs in the commit message and the pull request. A
+comment that only makes sense to someone who saw the conversation behind it is
 deleted in review.
 
 **Small units, single responsibility.** A function does one thing at one level

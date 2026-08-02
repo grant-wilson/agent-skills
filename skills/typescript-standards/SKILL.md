@@ -1,6 +1,6 @@
 ---
 name: typescript-standards
-description: TypeScript standards — strict compiler options that are never weakened, ECMAScript private fields, no `any` with `unknown` narrowed at boundaries, discriminated unions with exhaustiveness checks, modern language features, immutability by default, type-only imports, first-class AbortSignal cancellation, and Error subclasses with `cause`. Use when writing or reviewing TypeScript (*.ts) code.
+description: TypeScript standards — strict compiler options that are never weakened, ECMAScript private fields, no `any` with `unknown` narrowed at boundaries, discriminated unions with exhaustiveness checks, modern language features, `async`/`await` instead of promise callbacks, immutability by default, type-only imports, first-class AbortSignal cancellation, and Error subclasses with `cause`. Use when writing or reviewing TypeScript (*.ts) code.
 ---
 
 - Compile with `strict: true` plus `noUncheckedIndexedAccess`,
@@ -63,6 +63,25 @@ function render(state: LoadState<string>): string {
 validated-but-not-widened literals, `using`/`await using` for deterministic
 resource cleanup, `structuredClone` over hand-rolled deep copies, `??`/`?.` over
 `||` chains, and `Object.groupBy`/`Array.prototype.at` over manual equivalents.
+- Write async code with `async`/`await`. Promise callback chains are forbidden —
+no `.then()`/`.catch()`/`.finally()`, and no `new Promise()` executor except to
+adapt a callback- or event-based API that offers none; wrap that once, in one
+place, and `await` the wrapper everywhere else. Start concurrent work eagerly and
+join it with `Promise.all`/`Promise.allSettled`, and handle failure with
+`try`/`catch`/`finally` so control flow reads top to bottom.
+
+```typescript
+// Forbidden — callback chain, and the error path is easy to lose.
+function loadOrder(id: string): Promise<Order> {
+  return fetchOrder(id).then((order) => enrich(order));
+}
+
+// Required
+async function loadOrder(id: string): Promise<Order> {
+  const order = await fetchOrder(id);
+  return enrich(order);
+}
+```
 - Declare with `const`, mark properties and arrays `readonly`, and return new
 values instead of mutating inputs. Mutation is allowed only inside a function's
 own local scope for performance, never on parameters or shared state.

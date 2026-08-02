@@ -2,6 +2,46 @@
 
 Angular components can define styles that apply specifically to their template, enabling encapsulation and modularity.
 
+## Plain CSS, always
+
+Component styles are plain CSS. No Sass/SCSS, Less, or any other preprocessor —
+scaffold with `--style=css` and keep the `schematics` default in `angular.json`
+set to `css`. Tailwind CSS is not used.
+
+## Cascade layers
+
+Every component stylesheet wraps its rules in an explicit `@layer` so a
+component can never accidentally outrank the design system. View encapsulation
+scopes *which elements* a rule matches; it does nothing about *cascade priority*
+between a component rule and a global one. Layers are what make that
+intentional.
+
+The global stylesheet declares the order once, and because it loads before any
+component style is injected, every later `@layer components { … }` joins the
+already-ordered layer rather than creating a new one at the end.
+
+```css
+/* styles.css — loaded first, declares the order for the whole app */
+@layer reset, base, components, utilities;
+```
+
+```css
+/* photo.css */
+@layer components {
+  :host {
+    display: block;
+  }
+
+  img {
+    border-radius: var(--radius-full);
+  }
+}
+```
+
+All values come from design tokens (`var(--…)`) defined as custom properties.
+Raw hex values and magic pixel numbers in a component stylesheet are a review
+failure.
+
 ## Defining Styles
 
 Styles can be defined inline or in separate files.
@@ -11,12 +51,14 @@ Styles can be defined inline or in separate files.
   selector: 'app-photo',
   // Inline styles
   styles: `
-    img {
-      border-radius: 50%;
+    @layer components {
+      img {
+        border-radius: var(--radius-full);
+      }
     }
   `,
   // OR external file
-  styleUrl: 'photo.component.css',
+  styleUrl: 'photo.css',
 })
 export class Photo {}
 ```
@@ -71,7 +113,27 @@ Targets the host element based on some condition in its ancestry.
 ### `::ng-deep`
 
 Disables view encapsulation for a specific rule, allowing it to "leak" into child components.
-**Note: The Angular team strongly discourages the use of `::ng-deep`.** It is supported only for backwards compatibility.
+
+**`::ng-deep` is forbidden.** It is deprecated, supported only for backwards
+compatibility, and reaching into a child's internals couples the two components
+in a way no refactor can see. Give the child a custom property to consume
+instead:
+
+```css
+/* child.css */
+@layer components {
+  .panel {
+    background: var(--panel-surface, var(--color-surface));
+  }
+}
+
+/* parent.css — configure the child, don't reach into it */
+@layer components {
+  app-panel {
+    --panel-surface: var(--color-surface-raised);
+  }
+}
+```
 
 ## Styles in Templates
 

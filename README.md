@@ -45,9 +45,14 @@ Apply to every change, in every language and framework.
 
 | Skill                                                       | Applies to                          |
 | ----------------------------------------------------------- | ----------------------------------- |
-| [angular-conventions](skills/angular-conventions/SKILL.md)   | Projects with `angular.json`        |
-| [dotnet-conventions](skills/dotnet-conventions/SKILL.md)     | `global.json`, `*.sln`, `*.csproj`  |
-| [deno-conventions](skills/deno-conventions/SKILL.md)         | Projects with `deno.json(c)`        |
+| [angular-developer](skills/angular-developer/SKILL.md)       | Projects with `angular.json`        |
+| [angular-new-app](skills/angular-new-app/SKILL.md)           | Starting a new Angular workspace    |
+| [dotnet-developer](skills/dotnet-developer/SKILL.md)         | `global.json`, `*.sln`, `*.csproj`  |
+| [deno-developer](skills/deno-developer/SKILL.md)             | Projects with `deno.json(c)`        |
+
+`angular-developer` carries the Angular standards plus reference guides derived
+from the Angular team's skill of the same name — see
+[NOTICE.md](skills/angular-developer/NOTICE.md).
 
 ## Contributing
 

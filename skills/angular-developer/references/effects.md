@@ -15,30 +15,67 @@ Effects are intended for syncing signal state to imperative, non-signal APIs.
 **CRITICAL RULE: DO NOT use effects to propagate state.**
 If you find yourself using `.set()` or `.update()` on a signal _inside_ an effect to keep two signals in sync, you are making a mistake. This causes `ExpressionChangedAfterItHasBeenChecked` errors and infinite loops. **Always use `computed()` or `linkedSignal()` for state derivation.**
 
-## Basic Usage
+## Every effect has a name
 
-Effects execute asynchronously during the change detection process. They always run at least once.
+**An `effect()` is never left anonymous inside a constructor.** A constructor
+holding a stack of bare `effect(() => …)` calls hides how many side effects a
+component has and what each one is for. Name every effect for what it
+synchronizes, using whichever of these reads better in context:
+
+- a `#`-private method the constructor calls — best when the effect body is more
+  than one line, or needs cleanup;
+- a named field holding the `EffectRef` — best when the effect is a one-liner, or
+  when the reference is needed later to `destroy()` it.
+
+The effect must still be created in an injection context. A method called
+synchronously from the constructor is in one; an `async` method or a callback is
+not.
 
 ```ts
-import { Component, signal, effect } from '@angular/core';
+import { Component, signal, effect, inject } from '@angular/core';
 
 @Component({...})
 export class Example {
+  readonly #telemetry = inject(TelemetryClient);
   protected readonly count = signal(0);
 
   constructor() {
-    // Effect must be created in an injection context (e.g., a constructor)
+    this.#reportCountToTelemetry();
+  }
+
+  #reportCountToTelemetry(): void {
     effect((onCleanup) => {
-      console.log(`Count changed to ${this.count()}`);
+      const handle = this.#telemetry.beginReport(this.count());
 
-      const timer = setTimeout(() => console.log('Timer finished'), 1000);
-
-      // Cleanup function runs before the next execution, or when destroyed
-      onCleanup(() => clearTimeout(timer));
+      // Cleanup runs before the next execution, or when destroyed
+      onCleanup(() => handle.cancel());
     });
   }
 }
 ```
+
+```ts
+// One-liner: a named field carries the meaning just as well.
+export class ThemeSwitcher {
+  readonly #document = inject(DOCUMENT);
+  protected readonly theme = signal<Theme>('light');
+
+  readonly #applyThemeToDocument = effect(() =>
+    this.#document.documentElement.setAttribute('data-theme', this.theme()),
+  );
+}
+```
+
+```ts
+// ❌ Forbidden — nothing states what these three effects are for.
+constructor() {
+  effect(() => { /* … */ });
+  effect(() => { /* … */ });
+  effect(() => { /* … */ });
+}
+```
+
+Effects execute asynchronously during the change detection process. They always run at least once.
 
 ## DOM Manipulation with `afterRenderEffect`
 
@@ -55,9 +92,13 @@ import { Component, afterRenderEffect, viewChild, ElementRef } from '@angular/co
 
 @Component({...})
 export class Chart {
-  canvas = viewChild.required<ElementRef>('canvas');
+  protected readonly canvas = viewChild.required<ElementRef>('canvas');
 
   constructor() {
+    this.#resizeChartToCanvas();
+  }
+
+  #resizeChartToCanvas(): void {
     afterRenderEffect({
       // 1. Read from the DOM
       earlyRead: () => {

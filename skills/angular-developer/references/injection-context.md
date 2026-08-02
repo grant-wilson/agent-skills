@@ -15,7 +15,7 @@ An injection context is automatically available in:
 @Component({...})
 export class Example {
   // ✅ Valid: Field initializer
-  private router = inject(Router);
+  readonly #router = inject(Router);
 
   constructor() {
     // ✅ Valid: Constructor
@@ -38,10 +38,10 @@ import {inject, EnvironmentInjector, runInInjectionContext, Service} from '@angu
 
 @Service()
 export class MyService {
-  private injector = inject(EnvironmentInjector);
+  readonly #injector = inject(EnvironmentInjector);
 
   doSomethingDynamic() {
-    runInInjectionContext(this.injector, () => {
+    runInInjectionContext(this.#injector, () => {
       // ✅ Now valid to use inject() here
       const router = inject(Router);
     });

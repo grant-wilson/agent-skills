@@ -35,20 +35,20 @@ Inject the `Router` service to navigate via TypeScript code.
 Uses an array of commands.
 
 ```ts
-private router = inject(Router);
-private route = inject(ActivatedRoute);
+readonly #router = inject(Router);
+readonly #route = inject(ActivatedRoute);
 
 // Standard navigation
-this.router.navigate(['/profile']);
+this.#router.navigate(['/profile']);
 
 // With parameters
-this.router.navigate(['/search'], {
+this.#router.navigate(['/search'], {
   queryParams: { q: 'angular' },
   fragment: 'results'
 });
 
 // Relative navigation
-this.router.navigate(['edit'], { relativeTo: this.route });
+this.#router.navigate(['edit'], { relativeTo: this.#route });
 ```
 
 ### `router.navigateByUrl()`

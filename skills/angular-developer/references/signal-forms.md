@@ -406,10 +406,10 @@ userForm = form(this.userModel, (s) => {
     factory: (username) =>
       resource({
         params: username, // Use 'params' in resource()
-        loader: async ({params: value}) => {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          return value === 'taken';
-        },
+        // Await the real check; forward abortSignal so a superseded
+        // keystroke cancels its in-flight request.
+        loader: ({params: value, abortSignal}) =>
+          this.#usernames.isTaken(value, {abortSignal}),
       }),
 
     // 3. Map success to errors

@@ -9,6 +9,51 @@ Component harnesses are the standard, preferred way to interact with components 
 - **Reusability:** The same harness can be used in both unit tests and E2E tests.
 
 Angular Material provides a test harness for every component in its library.
+**Every component you own also gets one**, in a co-located `*.harness.ts`. Specs
+never query the DOM directly — that knowledge belongs in the harness, in one
+place, so a markup change breaks one file instead of every spec.
+
+## Authoring a harness
+
+Extend `ComponentHarness`, give it a `hostSelector`, and expose methods named for
+what a user does — not for the DOM underneath.
+
+```ts
+// order-list.harness.ts
+import {ComponentHarness} from '@angular/cdk/testing';
+
+export class OrderListHarness extends ComponentHarness {
+  static readonly hostSelector = 'app-order-list';
+
+  readonly #rows = this.locatorForAll('[data-testid="order-row"]');
+  readonly #emptyMessage = this.locatorForOptional('[data-testid="empty"]');
+
+  async getOrderIds(): Promise<string[]> {
+    const rows = await this.#rows();
+    return Promise.all(rows.map((row) => row.getAttribute('data-order-id'))) as Promise<
+      string[]
+    >;
+  }
+
+  async getEmptyMessage(): Promise<string | null> {
+    return (await this.#emptyMessage())?.text() ?? null;
+  }
+
+  async removeOrder(id: string): Promise<void> {
+    const button = await this.locatorFor(
+      `[data-order-id="${id}"] [data-testid="remove"]`,
+    )();
+    await button.click();
+  }
+}
+```
+
+- Target stable `data-testid` attributes rather than CSS classes, which are
+  styling concerns and change freely.
+- Return domain values (`string[]` of ids), not `TestElement`s — a spec that
+  handles `TestElement`s is doing DOM work the harness should have absorbed.
+- Add a static `with(options)` returning a `HarnessPredicate` when a page can
+  contain more than one instance.
 
 ## Using a Harness in a Unit Test
 

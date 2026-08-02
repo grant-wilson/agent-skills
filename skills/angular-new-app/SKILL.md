@@ -1,62 +1,100 @@
 ---
 name: angular-new-app
-description: Creates a new Angular app using the Angular CLI. This skill should be used whenever a user wants to create a new Angular application and contains important guidelines for how to effectively create a modern Angular application.
-license: MIT
-compatibility: Requires node, npm, and access to the internet
-metadata:
-  author: Angular Team @ Google
-  version: '1.0'
+description: Creating a new Angular v22 application with the Angular CLI — the `ng new` flow, non-interactive flags, plain-CSS and cascade-layer setup, zoneless bootstrap, analytics-off configuration, and the generators used for every subsequent artifact. Use when starting a new Angular application or workspace from scratch; for work inside an existing Angular project, use the angular-developer skill instead.
 ---
 
 # Angular New App
 
-You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices. You have access to tools to create new Angular apps.
+Creates a new Angular application. Everything this skill sets up must satisfy the
+House Standards in the `angular-developer` skill — read that skill for how to
+write the code that follows; this one only covers getting the workspace on disk.
 
-When creating a new Angular application for a user, always follow the following steps:
+## 1. Confirm the CLI
 
-1. **Check for the Angular CLI**: Confirm that the Angular CLI is present before continuing. Here are some ways to confirm:
-   - on `*nix` systems `which ng`
-   - on Windows systems `where ng`, if powershell `gcm ng`
+Check for the Angular CLI: `which ng` on \*nix, `where ng` (or `gcm ng` in
+PowerShell) on Windows. If it is missing, ask whether to install it globally with
+`npm install -g @angular/cli`, or just use `npx` for the create step.
 
-   If it is present, skip to step 2, if not, ask the user if they'd like to install it globally for the user with the following command:
+## 2. Create the application
 
-   `npm install -g @angular/cli`
+Suggest a name based on the user's description, or ask for one. Then:
 
-   _IMPORTANT_: There are best practices available for building outstanding Angular applications via the MCP server that is bundled with the Angular CLI. Available through `ng mcp` and the `get_best_practices`.
+```bash
+npx ng new <app-name> --style=css --interactive=false --ai-config=claude
+```
 
-2. **Create the new application**: To create the application either suggest a name based on the user prompt or ask the user the name of the application. Create the application with the following command:
+Required flags, not preferences:
 
-   `npx ng new <app-name> [list of flags based on the description of the app] --interactive=false --ai-config=[agents, claude, copilot, cursor, gemini, jetbrains, none, windsurf]`
+- `--style=css` — plain CSS is the only style language. Never `scss` or `less`.
+- `--interactive=false` — no prompts in CI or local runs.
+- `--ai-config=<agent>` — prefer `claude`; use the option matching the user's
+  environment (`agents`, `copilot`, `cursor`, `gemini`, `jetbrains`, `windsurf`).
+  Read the generated config file so subsequent code matches it.
 
-   _Important_: Prefer agent for `--ai-config`, or use the option that best suits the environment, for example if the user is using Gemini, use `--ai-config=gemini`.
+Other flags to consider from the user's requirements:
 
-   Load the contents of that AI configuration into memory so that you can refer to it when generating code for the user. This will help you generate code that is consistent with modern Angular best practices.
+- `--routing` — routing setup; add it unless the app is genuinely single-view.
+- `--ssr` — server-side rendering.
+- `--prefix=<prefix>` — component selector prefix.
 
-   Consider these commonly useful flags based on the user's requirements:
-   - `--style=scss|css|less` — stylesheet format
-   - `--routing` — add routing module
-   - `--ssr` — enable server-side rendering
-   - `--prefix=<prefix>` — component selector prefix
-   - `--skip-tests` — only if the user explicitly requests it
+**Never pass `--skip-tests`**, even if asked to move fast. Every component and
+service ships with tests.
 
-3. Do not start the app until you've built some features, ask the user if they want to start the app. You can always run `npx ng build` to check for errors and repair them.
+## 3. Configure the workspace
 
-4. Remember the following guidelines for continuing to generate Angular application code:
-   - To generate components, use the Angular CLI `npx ng generate component <component-name>`
-   - To generate services, use the Angular CLI `npx ng generate service <service-name>`
-   - To generate pipes, use the Angular CLI `npx ng generate pipe <pipe-name>`
-   - To generate directives, use the Angular CLI `npx ng generate directive <directive-name>`
-   - To generate interfaces, use the Angular CLI `npx ng generate interface <interface-name>`
-   - To generate guards, use the Angular CLI `npx ng generate guard <guard-name>`
-   - To generate interceptors, use the Angular CLI `npx ng generate interceptor <interceptor-name>`
-   - To generate resolvers, use the Angular CLI `npx ng generate resolver <resolver-name>`
-   - To generate enums, use the Angular CLI `npx ng generate enum <enum-name>`
-   - To generate classes, use the Angular CLI `npx ng generate class <class-name>`
+Immediately after `ng new`, before writing any feature code:
 
-   _IMPORTANT_: Take note of the path returned from running the generate commands so that you know exactly where the new files are.
+1. In `angular.json`, set `"cli": { "analytics": false }` so `ng` never blocks on
+   an analytics prompt, and confirm the `schematics` style default is `css`.
+2. Confirm `app.config.ts` uses `provideZonelessChangeDetection()` and that no
+   `zone.js` polyfill is listed in `angular.json`.
+3. Declare the cascade layer order once at the top of `src/styles.css`, before any
+   component style loads:
 
-   Use the Angular CLI to generate the code, then augment the code to meet the needs of the application.
+   ```css
+   @layer reset, base, components, utilities;
+   ```
 
-5. To add tailwind, run `npx ng add tailwindcss`. After that, you do not have to do anything else, you can start using tailwind classes in your Angular application. Follow the best practices for tailwind v4 here, learn more if needed: https://tailwindcss.com/docs/upgrade-guide.
+4. Define the design tokens the app will use as custom properties on `:root` in
+   the same file — colors, spacing, radii, typography. Component styles reference
+   them with `var(--…)` and never hard-code values.
+5. Create `src/testing/` for shared TestBed setup builders, fakes, and data
+   builders. Specs import from here rather than defining local helpers.
 
-_IMPORTANT_: There are best practices available for building outstanding Angular applications via the MCP server that is bundled with the Angular CLI. Available through `npx ng mcp` and the `get_best_practices`.
+Do not add Tailwind CSS. Do not add a CSS preprocessor.
+
+## 4. Generate every subsequent artifact with the CLI
+
+Never hand-create these files — the schematics wire up configuration that manual
+creation misses.
+
+| Artifact    | Command                                   |
+| :---------- | :---------------------------------------- |
+| Component   | `npx ng generate component <name>`        |
+| Service     | `npx ng generate service <name>`          |
+| Pipe        | `npx ng generate pipe <name>`             |
+| Directive   | `npx ng generate directive <name>`        |
+| Guard       | `npx ng generate guard <name>`            |
+| Interceptor | `npx ng generate interceptor <name>`      |
+| Resolver    | `npx ng generate resolver <name>`         |
+| Interface   | `npx ng generate interface <name>`        |
+| Enum        | `npx ng generate enum <name>`             |
+| Class       | `npx ng generate class <name>`            |
+
+Note the path each command prints so you know exactly where the new files are,
+then augment the generated code to meet the application's needs.
+
+## 5. Build features test-first
+
+Red–green–refactor for each behavior: the failing test, then the implementation,
+then the refactor. Before reporting any feature as done, `npx ng test` passes and
+`npx ng build` succeeds with zero warnings.
+
+Do not start the dev server on your own — ask the user whether they want it
+running. `npx ng build` is enough to check for errors.
+
+---
+
+_The Angular CLI bundles an MCP server with additional guidance, available via
+`npx ng mcp` and its `get_best_practices` tool. Where its advice conflicts with
+the House Standards in `angular-developer`, the House Standards win._

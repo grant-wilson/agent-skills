@@ -79,7 +79,11 @@ export class CustomCounter {
 <custom-counter [(value)]="myProperty" />
 ```
 
-## Decorator-based Inputs (@Input)
+## Decorator-based Inputs (@Input) — legacy
+
+`@Input()` is never written in new code. This section is for reading and
+migrating inputs that already exist; `ng generate @angular/core:signal-input-migration`
+converts them.
 
 The legacy API remains supported but is not recommended for new code.
 

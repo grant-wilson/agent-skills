@@ -31,10 +31,10 @@ import {Service, inject} from '@angular/core';
 
 @Service()
 export class UserService {
-  private readonly http = inject(HttpClient);
+  readonly #http = inject(HttpClient);
 
   getUser(id: string) {
-    return this.http.get<User>(`/api/users/${id}`);
+    return this.#http.get<User>(`/api/users/${id}`);
   }
 }
 ```
@@ -94,7 +94,8 @@ import {input} from '@angular/core';
 
 export class UserProfile {
   readonly userId = input.required<string>();
-  readonly user = httpResource(() => `/api/users/${this.userId()}`);
+
+  protected readonly user = httpResource(() => `/api/users/${this.userId()}`);
 }
 ```
 
