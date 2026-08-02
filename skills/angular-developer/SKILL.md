@@ -1,6 +1,6 @@
 ---
 name: angular-developer
-description: Angular v22 standards and code generation — CLI-driven scaffolding, standalone components, signal state and the function-based component API, resource APIs for async data, a decision rule for signals vs `async`/`await` vs RxJS Observables, zoneless change detection, built-in template control flow, `inject()`, signal forms, layered plain-CSS component styles, lazy routes, and Vitest + TestBed testing with CDK harnesses, plus reference guides for components, reactivity, HTTP, DI, routing, accessibility, animations, and tooling. Use when writing, reviewing, or scaffolding Angular code, or when working in a project that contains angular.json.
+description: Angular v22 standards and code generation — CLI-driven scaffolding, standalone components, signal state and the function-based component API, resource APIs for async data, a decision rule for signals vs `async`/`await` vs RxJS Observables, zoneless change detection, built-in template control flow, `inject()`, signal forms, layered plain-CSS component styles, lazy routes, `ng lint` with angular-eslint plus Prettier as the only formatter, and Vitest + TestBed testing with CDK harnesses, plus reference guides for components, reactivity, HTTP, DI, routing, accessibility, animations, and tooling. Use when writing, reviewing, or scaffolding Angular code, or when working in a project that contains angular.json.
 ---
 
 # Angular Developer
@@ -31,6 +31,40 @@ These are not defaults to weigh against alternatives. They are the standard.
   styling defeats the design-token and cascade-layer rules below.
 - Set `"cli": { "analytics": false }` in `angular.json` so `ng` never prompts
   interactively in CI or local runs.
+
+### Linting and formatting
+
+- ESLint through `angular-eslint` is the linter. Install it with
+  `ng add angular-eslint` and run it as `ng lint`. That schematic writes a flat
+  `eslint.config.js` and sets `"schematicCollections": ["angular-eslint"]` in
+  `angular.json` so later projects inherit the setup. Never invoke `eslint`
+  directly — only `ng lint` resolves the builder and each project's config.
+- Prettier is the sole formatting authority for every file the Angular workspace
+  owns: TypeScript, templates, CSS, JSON, Markdown. Wire it to a `format` script
+  (`prettier --write .`) and a `format:check` script for CI.
+- Point Prettier at the `angular` parser for templates. The CLI's current naming
+  produces `order-list.html`, which no longer matches Prettier's
+  `*.component.html` default, so without the override templates are parsed as
+  plain HTML and the `@if`/`@for` blocks are mangled.
+
+```json
+// .prettierrc
+{
+  "overrides": [{ "files": "*.html", "options": { "parser": "angular" } }]
+}
+```
+
+- Install `eslint-config-prettier` and list it last in `eslint.config.js`. ESLint
+  reports correctness, Prettier decides layout, and the two never disagree about
+  the same line.
+- Deno's toolchain never touches an Angular project. `deno fmt`, `deno lint`, and
+  `deno check` are forbidden here — including in a repository whose root is a
+  Deno workspace — because `deno fmt` uses different defaults than Prettier and
+  cannot parse Angular templates at all. In a mixed repository, list the Angular
+  project directories in `exclude` in `deno.json` and in `deno.disablePaths` in
+  `.vscode/settings.json`, and mirror the split in `.prettierignore` so Prettier
+  leaves the Deno packages to `deno fmt`. The `deno-developer` skill owns the
+  full configuration.
 
 ### Components and reactivity
 
@@ -221,11 +255,15 @@ src/
 Follow red–green–refactor: write the failing test first, then the implementation.
 Before reporting work as done, in this order:
 
-1. `ng test` — passes, including the new test that failed before the change.
-2. `ng build` — succeeds with zero warnings. Warnings are errors; fix them rather
+1. `npx prettier --write .` — formatting is applied, never argued about.
+2. `ng lint` — zero errors and zero warnings.
+3. `ng test` — passes, including the new test that failed before the change.
+4. `ng build` — succeeds with zero warnings. Warnings are errors; fix them rather
    than filtering them out.
 
-Do not skip either step, and do not report success without having run them.
+Do not skip a step, and do not report success without having run them. In a
+repository shared with Deno, run these from the Angular project directory and
+never substitute `deno fmt` or `deno lint` for steps 1 and 2.
 
 ## Creating new projects
 

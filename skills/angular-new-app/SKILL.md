@@ -1,6 +1,6 @@
 ---
 name: angular-new-app
-description: Creating a new Angular v22 application with the Angular CLI — the `ng new` flow, non-interactive flags, plain-CSS and cascade-layer setup, zoneless bootstrap, analytics-off configuration, and the generators used for every subsequent artifact. Use when starting a new Angular application or workspace from scratch; for work inside an existing Angular project, use the angular-developer skill instead.
+description: Creating a new Angular v22 application with the Angular CLI — the `ng new` flow, non-interactive flags, plain-CSS and cascade-layer setup, zoneless bootstrap, analytics-off configuration, angular-eslint and Prettier setup, scoping the workspace out of Deno's tooling when the repository has both, and the generators used for every subsequent artifact. Use when starting a new Angular application or workspace from scratch; for work inside an existing Angular project, use the angular-developer skill instead.
 ---
 
 # Angular New App
@@ -63,6 +63,46 @@ Immediately after `ng new`, before writing any feature code:
 
 Do not add Tailwind CSS. Do not add a CSS preprocessor.
 
+## 3a. Set up linting and formatting
+
+```bash
+npx ng add angular-eslint
+npm install --save-dev prettier eslint-config-prettier
+```
+
+Then, before writing any feature code:
+
+1. Add `eslint-config-prettier` as the last entry in the generated
+   `eslint.config.js`, so ESLint stops reporting formatting.
+2. Write `.prettierrc` with the `angular` parser bound to templates — the CLI
+   names them `app.html`, which does not match Prettier's `*.component.html`
+   default, and the plain HTML parser mangles `@if`/`@for` blocks:
+
+   ```json
+   {
+     "overrides": [{ "files": "*.html", "options": { "parser": "angular" } }]
+   }
+   ```
+
+3. Add `"format": "prettier --write ."` and
+   `"format:check": "prettier --check ."` to `package.json` scripts.
+
+## 3b. If the workspace lives in a Deno repository
+
+Deno's tooling must never run over the Angular project — `deno fmt` disagrees
+with Prettier and cannot parse Angular templates. Register the split in both
+places at once:
+
+1. Add the Angular project's directory to the top-level `exclude` array in the
+   repository's `deno.json`, which covers `deno fmt`, `lint`, `check`, `test`,
+   and the LSP together.
+2. Add the same directory to `deno.disablePaths` in `.vscode/settings.json`, so
+   the Deno extension stands down and the Angular Language Service takes over.
+3. Add the repository's Deno packages to `.prettierignore`, so the exclusion runs
+   both ways.
+
+See the `deno-developer` skill for the full mixed-repository configuration.
+
 ## 4. Generate every subsequent artifact with the CLI
 
 Never hand-create these files — the schematics wire up configuration that manual
@@ -87,8 +127,9 @@ then augment the generated code to meet the application's needs.
 ## 5. Build features test-first
 
 Red–green–refactor for each behavior: the failing test, then the implementation,
-then the refactor. Before reporting any feature as done, `npx ng test` passes and
-`npx ng build` succeeds with zero warnings.
+then the refactor. Before reporting any feature as done: `npm run format`,
+`npx ng lint` reports nothing, `npx ng test` passes, and `npx ng build` succeeds
+with zero warnings.
 
 Do not start the dev server on your own — ask the user whether they want it
 running. `npx ng build` is enough to check for errors.
