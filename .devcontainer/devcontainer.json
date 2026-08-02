@@ -6,7 +6,8 @@
 	"image": "mcr.microsoft.com/devcontainers/base:resolute",
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/grant-wilson/devcontainer-features/claude:latest": {}
+		"ghcr.io/grant-wilson/devcontainer-features/claude:latest": {},
+		"ghcr.io/devcontainers/features/node:2": {}
 	}
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

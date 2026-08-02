@@ -1,5 +1,6 @@
 ---
-description: angular-conventions conventions for this project. Applies to projects that contain angular.json.
+name: angular-conventions
+description: Angular conventions — CLI-driven scaffolding, standalone components, signal-based state and the function-based component API, resource APIs for async data, zoneless change detection, built-in template control flow, `inject()`, lazy routes, and Vitest + TestBed testing with CDK harnesses. Use when writing, reviewing, or scaffolding Angular code, or when working in a project that contains angular.json.
 ---
 
 - All scaffolding and maintenance goes through the Angular CLI —

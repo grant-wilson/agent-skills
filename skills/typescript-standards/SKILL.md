@@ -1,6 +1,6 @@
 ---
-description: typescript-standards conventions for this project. Applies when working with files matching *.ts.
-paths: ["*.ts"]
+name: typescript-standards
+description: TypeScript standards — strict compiler options that are never weakened, ECMAScript private fields, no `any` with `unknown` narrowed at boundaries, discriminated unions with exhaustiveness checks, modern language features, immutability by default, type-only imports, first-class AbortSignal cancellation, and Error subclasses with `cause`. Use when writing or reviewing TypeScript (*.ts) code.
 ---
 
 - Compile with `strict: true` plus `noUncheckedIndexedAccess`,

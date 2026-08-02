@@ -1,6 +1,6 @@
 ---
-description: sql-standards conventions for this project. Applies when working with files matching *.sql.
-paths: ["*.sql"]
+name: sql-standards
+description: SQL standards — always-parameterized queries, explicit column lists instead of SELECT *, set-based operations and CTEs over cursors, primary keys and schema-enforced integrity, snake_case naming with explicit constraint names, index-friendly predicates, forward-only reviewed migrations, and tightly scoped transactions with chunked backfills. Use when writing or reviewing SQL queries, schema definitions, or database migrations.
 ---
 
 - SQL that touches user input is always parameterized — never string-concatenated,

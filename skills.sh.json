@@ -1,0 +1,31 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Universal Standards",
+      "description": "Apply to every change, in every language and framework.",
+      "skills": [
+        "architecture-standards",
+        "general-coding-standards",
+        "unit-testing-standards"
+      ]
+    },
+    {
+      "title": "Languages",
+      "description": "Per-language conventions, selected by the files being edited.",
+      "skills": [
+        "csharp-standards",
+        "typescript-standards",
+        "sql-standards",
+        "html-standards",
+        "css-standards"
+      ]
+    },
+    {
+      "title": "Frameworks and Runtimes",
+      "description": "Conventions for a specific stack, selected by the project's manifest files.",
+      "skills": ["angular-conventions", "dotnet-conventions", "deno-conventions"]
+    }
+  ]
+}

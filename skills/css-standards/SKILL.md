@@ -1,6 +1,6 @@
 ---
-description: css-standards conventions for this project. Applies when working with files matching *.{css,scss}.
-paths: ["*.{css,scss}"]
+name: css-standards
+description: CSS standards — design tokens as custom properties, grid and flexbox with gap and logical properties, explicit cascade layers with shallow nesting, container queries over media queries, single-class low-specificity selectors, BEM or scoped styles, and honoring user preferences for motion, color scheme, and contrast. Use when writing or reviewing CSS or SCSS, or styling any component.
 ---
 
 - All colors, spacing, typography, radii, and shadows come from custom properties

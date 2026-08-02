@@ -1,6 +1,6 @@
 ---
-description: html-standards conventions for this project. Applies when working with files matching *.html.
-paths: ["*.html"]
+name: html-standards
+description: HTML standards — semantic elements over divs, native semantics before ARIA with full keyboard operability, alt text and layout-shift-free images, labeled and correctly typed form controls with accessible error text, built-in behavior (dialog, details, popover, datalist) over JavaScript re-implementations, CSP-compatible markup with no inline style or handlers, and required document head elements. Use when writing or reviewing HTML or component templates.
 ---
 
 - Use the element that names the content: `<header>`, `<nav>`, `<main>` (exactly

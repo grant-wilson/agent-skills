@@ -1,6 +1,6 @@
 ---
-description: csharp-standards conventions for this project. Applies when working with files matching *.cs.
-paths: ["*.cs"]
+name: csharp-standards
+description: C# language standards — latest-version idioms, nullable reference types with warnings as errors, records for data, async end to end with cancellation tokens, switch expressions and patterns, specific exceptions and throw helpers, readable LINQ, and narrow visibility with sealed types. Use when writing or reviewing any C# (*.cs) file.
 ---
 
 - Target the latest stable C# language version and prefer its idioms: file-scoped
