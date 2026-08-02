@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/grant-wilson/devcontainer-features/claude:latest": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/grant-wilson/devcontainer-features/claude@sha256:6d7776a798fbda61229e1ed8dc0cd0b392025f233e2fd55a59219f3a5f21b989",
+      "integrity": "sha256:6d7776a798fbda61229e1ed8dc0cd0b392025f233e2fd55a59219f3a5f21b989"
+    }
+  }
+}
