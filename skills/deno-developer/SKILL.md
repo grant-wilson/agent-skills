@@ -1,6 +1,6 @@
 ---
 name: deno-developer
-description: Deno standards — JSR and @std dependencies pinned in the deno.json import map, the built-in toolchain (fmt, lint, check, test, task), web-platform and Deno-native APIs over node compat, least-privilege permission flags with no --allow-all, deliberate module surfaces, @std/testing for BDD tests, fake time, and mocks, and how to scope Deno's tooling and VS Code extension in a repository shared with another toolchain such as Angular. Use when writing or reviewing code in a project that contains deno.json or deno.jsonc, and when deciding which formatter or linter owns a directory in a mixed Deno repository.
+description: Deno standards — JSR and @std dependencies pinned in the deno.json import map, the built-in toolchain (fmt, lint, check, test, task), web-platform and Deno-native APIs over node compat, least-privilege permission flags with no --allow-all, deliberate module surfaces, idiomatic Deno tests with fake time and mocks, and how to scope Deno's tooling and VS Code extension in a repository shared with another toolchain such as Angular. Use when writing or reviewing code in a project that contains deno.json or deno.jsonc, and when deciding which formatter or linter owns a directory in a mixed Deno repository.
 ---
 
 - Prefer Deno's `@std/*` standard library and JSR packages over npm imports;
@@ -29,8 +29,8 @@ everywhere, including CI.
 - Each package exposes a deliberate public surface through `mod.ts` (or the
 `exports` map in `deno.json`); internal modules are not imported across package
 boundaries. Co-locate `<module>.test.ts` next to `<module>.ts`.
-- Tests use `@std/testing/bdd` (`describe`/`it`) with `@std/assert`, mock time
-with `@std/testing/time`'s `FakeTime`, and fake dependencies with
+- Tests use `Deno.test` with `@std/assert`, mock time with
+`@std/testing/time`'s `FakeTime`, and fake dependencies with
 `@std/testing/mock` (`spy`/`stub`). The sanitizers for resources, ops, and exits
 stay enabled — a test that leaks is a failing test.
 
