@@ -6,6 +6,7 @@
       "title": "Universal Standards",
       "description": "Apply to every change, in every language and framework.",
       "skills": [
+        "spec-driven-development",
         "architecture-standards",
         "general-coding-standards",
         "unit-testing-standards"

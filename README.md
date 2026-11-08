@@ -27,6 +27,7 @@ Apply to every change, in every language and framework.
 
 | Skill                                                             | Covers                                                                              |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [spec-driven-development](skills/spec-driven-development/SKILL.md) | End-to-end `spec flow`, stage commands (`req new/amend/replace`, `spec req/plan/implement/audit`), existing-project migration (`spec adopt`), structured trade-off questions, cross-project impact analysis, persistent `specs/notes.md` memory, and Conventional Commit checkpoints |
 | [architecture-standards](skills/architecture-standards/SKILL.md)   | Dependency rule, ports and adapters, composition root, bounded contexts, operability |
 | [general-coding-standards](skills/general-coding-standards/SKILL.md) | Naming, small units, fail fast, DRY, SOLID, no dead code, review and security hygiene |
 | [unit-testing-standards](skills/unit-testing-standards/SKILL.md)   | TDD, Arrange–Act–Assert, public-surface testing, fakes over mocks, FIRST, coverage    |
